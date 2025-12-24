@@ -1,28 +1,45 @@
 // server.js
-require("dotenv").config();
-const express = require("express");
-const bodyParser = require("body-parser");
+require('dotenv').config();
+const express = require('express');
+const session = require('express-session');
+const path = require('path');
+
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const guildRoutes = require('./routes/guild');
+const errorHandler = require('./utils/errorHandler');
 
 const app = express();
 
 // Middleware
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Import routes
-const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/user");
-const guildRoutes = require("./routes/guild");
+// Session setup (use SESSION_SECRET from env)
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET || 'fallback_secret',
+        resave: false,
+        saveUninitialized: false,
+        cookie: { secure: false }, // set true if behind HTTPS
+    })
+);
 
-// Mount routes
-app.use("/auth", authRoutes);       // /auth/login, /auth/callback
-app.use("/api/user", userRoutes);   // /api/user/:id
-app.use("/api/guild", guildRoutes); // /api/guild/:id, /api/guild/
+// Routes
+app.use('/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/guild', guildRoutes);
 
-// Root route
-app.get("/", (req, res) => {
-    res.send("✅ Comorade Backend is running");
+// Health check route
+app.get('/', (req, res) => {
+    res.json({ status: 'Backend is running 🚀' });
 });
 
-// Start server
+// Error handler
+app.use(errorHandler);
+
+// Port handling for Render
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
