@@ -1,7 +1,5 @@
 // utils/errorHandler.js
-function handleError(res, err, status = 500) {
-    console.error(err);
-    res.status(status).json({ error: err.message });
+export default function errorHandler(err, req, res, next) {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
 }
-
-module.exports = { handleError };

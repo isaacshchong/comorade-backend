@@ -1,27 +1,17 @@
-// routes/user.js
-const express = require("express");
-const { Client, Databases, Query } = require("appwrite");
+import express from 'express';
+import supabase from '../services/supabase.js';
+
 const router = express.Router();
 
-const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT)
-    .setProject(process.env.APPWRITE_PROJECT_ID);
+// Get user by ID
+router.get('/:id', async (req, res) => {
+    const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', req.params.id);
 
-const databases = new Databases(client);
-
-const DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
-const USERS_COLLECTION_ID = process.env.APPWRITE_USERS_COLLECTION_ID;
-
-// 🚀 Get user by Discord ID
-router.get("/:id", async (req, res) => {
-    try {
-        const result = await databases.listDocuments(DATABASE_ID, USERS_COLLECTION_ID, [
-            Query.equal("discordId", req.params.id),
-        ]);
-        res.json(result.documents);
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
+    if (error) return res.status(400).json({ error: error.message });
+    res.json(data[0]);
 });
 
-module.exports = router;
+export default router;
